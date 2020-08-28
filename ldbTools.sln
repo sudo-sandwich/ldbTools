@@ -1,0 +1,25 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ldbTools", "ldbTools\ldbTools.csproj", "{A024D839-26F6-4664-A2CC-B93881C78E43}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A024D839-26F6-4664-A2CC-B93881C78E43}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A024D839-26F6-4664-A2CC-B93881C78E43}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A024D839-26F6-4664-A2CC-B93881C78E43}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A024D839-26F6-4664-A2CC-B93881C78E43}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {71BB711C-C1D7-4A16-B076-F6EF2DDD6AB7}
+	EndGlobalSection
+EndGlobal
