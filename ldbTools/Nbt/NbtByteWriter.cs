@@ -6,64 +6,36 @@ using System.Linq;
 using System.Text;
 
 namespace ldbTools.Nbt {
+    /// <summary>
+    /// Class for writing NbtTags into bytes.
+    /// </summary>
     public class NbtByteWriter : IDisposable {
+        /// <summary>
+        /// Output stream. Populated after any tag is read.
+        /// </summary>
         public MemoryStream Output { get; }
 
+        /// <summary>
+        /// Creates a new NbtByteWriter.
+        /// </summary>
         public NbtByteWriter() {
             Output = new MemoryStream();
         }
 
-        /*
-        public void WriteNamedNbtTag(NbtTag value) {
-            switch (value.Type) {
-                case TagType.Byte:
-                    WriteNbtByte((NbtByte)value);
-                    break;
-                case TagType.Short:
-                    WriteNbtShort((NbtShort)value);
-                    break;
-                case TagType.Int:
-                    WriteNbtInt((NbtInt)value);
-                    break;
-                case TagType.Long:
-                    WriteNbtLong((NbtLong)value);
-                    break;
-                case TagType.Float:
-                    WriteNbtFloat((NbtFloat)value);
-                    break;
-                case TagType.Double:
-                    WriteNbtDouble((NbtDouble)value);
-                    break;
-                case TagType.ByteArray:
-                    WriteNbtByteArray((NbtByteArray)value);
-                    break;
-                case TagType.String:
-                    WriteNbtString((NbtString)value);
-                    break;
-                case TagType.List:
-                    WriteNbtList((NbtList)value);
-                    break;
-                case TagType.Compound:
-                    WriteNbtCompound((NbtCompound)value);
-                    break;
-                case TagType.IntArray:
-                    WriteNbtIntArray((NbtIntArray)value);
-                    break;
-                case TagType.LongArray:
-                    WriteNbtLongArray((NbtLongArray)value);
-                    break;
-                default:
-                    throw new Exception("Could not determine TagType.");
-            }
-        }
-        */
-
+        /// <summary>
+        /// Writes the given tag to Output.
+        /// </summary>
+        /// <param name="tagToWrite">Tag to write.</param>
         public void WriteNbtTag(NbtTag tagToWrite) {
             WriteTagType(tagToWrite.Type);
             WriteString(tagToWrite.Name);
             WriteNbtTagValue(tagToWrite);
         }
 
+        /// <summary>
+        /// Writes the payload of the given tag to Output (ie TagType and Name are not written).
+        /// </summary>
+        /// <param name="tagToWrite">Tag to write.</param>
         public void WriteNbtTagValue(NbtTag tagToWrite) {
             switch (tagToWrite.Type) {
                 case TagType.Byte:
@@ -121,163 +93,133 @@ namespace ldbTools.Nbt {
             }
         }
 
-        /*
-        public void WriteNbtByte(NbtByte value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteSByte(value.Value);
-        }
-
-        public void WriteNbtShort(NbtShort value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteShort(value.Value);
-        }
-
-        public void WriteNbtInt(NbtInt value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteInt(value.Value);
-        }
-
-        public void WriteNbtLong(NbtLong value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteLong(value.Value);
-        }
-
-        public void WriteNbtFloat(NbtFloat value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteSingle(value.Value);
-        }
-
-        public void WriteNbtDouble(NbtDouble value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteDouble(value.Value);
-        }
-
-        public void WriteNbtByteArray(NbtByteArray value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteInt(value.Value.Count);
-            WriteSBytes(value.Value.ToArray());
-        }
-
-        public void WriteNbtString(NbtString value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteString(value.Value);
-        }
-
-        public void WriteNbtList(NbtList value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteTagType(value.Type);
-            WriteInt(value.Value.Count);
-            
-            foreach (NbtTag element in value.Value) {
-                WriteUnnamedNbtTag(element);
-            }
-        }
-
-        public void WriteNbtCompound(NbtCompound value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-
-            foreach (NbtTag element in value.Value) {
-                WriteNamedNbtTag(element);
-            }
-
-            WriteTagType(TagType.End);
-        }
-
-        public void WriteNbtIntArray(NbtIntArray value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteInt(value.Value.Count);
-            WriteInts(value.Value.ToArray());
-        }
-
-        public void WriteNbtLongArray(NbtLongArray value) {
-            WriteTagType(value.Type);
-            WriteString(value.Name);
-            WriteInt(value.Value.Count);
-            WriteLongs(value.Value.ToArray());
-        }
-        */
-
+        /// <summary>
+        /// Writes the byte representation of a TagType to Output.
+        /// </summary>
+        /// <param name="value">TagType to write.</param>
         public void WriteTagType(TagType value) {
             Output.WriteByte((byte)value);
         }
 
+        /// <summary>
+        /// Writes a byte to Output.
+        /// </summary>
+        /// <param name="value">Byte to write.</param>
         public void WriteByte(byte value) {
             Output.WriteByte(value);
         }
 
+        /// <summary>
+        /// Writes an array of bytes to Output.
+        /// </summary>
+        /// <param name="value">Array of bytes to write.</param>
         public void WriteBytes(byte[] value) {
             Output.Write(value, 0, value.Length);
         }
 
+        /// <summary>
+        /// Writes a signed byte to Output.
+        /// </summary>
+        /// <param name="value">Signed byte to write.</param>
         public void WriteSByte(sbyte value) {
             Output.WriteByte((byte)value);
         }
 
+        /// <summary>
+        /// Writes an array of signed bytes to Output.
+        /// </summary>
+        /// <param name="value">Array of signed bytes to write.</param>
         public void WriteSBytes(sbyte[] value) {
             // stolen from: https://stackoverflow.com/questions/829983/how-to-convert-a-sbyte-to-byte-in-c
             WriteBytes((byte[])(Array)value);
         }
 
+        /// <summary>
+        /// Writes a signed short to Output.
+        /// </summary>
+        /// <param name="value">Signed short to write.</param>
         public void WriteShort(short value) {
             Span<byte> bytes = stackalloc byte[sizeof(short)];
             BinaryPrimitives.WriteInt16LittleEndian(bytes, value);
             Output.Write(bytes);
         }
 
+        /// <summary>
+        /// Writes an unsigned short to Output.
+        /// </summary>
+        /// <param name="value">Unsigned short to write.</param>
         public void WriteUShort(ushort value) {
             Span<byte> bytes = stackalloc byte[sizeof(ushort)];
             BinaryPrimitives.WriteUInt16LittleEndian(bytes, value);
             Output.Write(bytes);
         }
 
+        /// <summary>
+        /// Writes a signed int to Output.
+        /// </summary>
+        /// <param name="value">Signed int to write.</param>
         public void WriteInt(int value) {
             Span<byte> bytes = stackalloc byte[sizeof(int)];
             BinaryPrimitives.WriteInt32LittleEndian(bytes, value);
             Output.Write(bytes);
         }
 
+        /// <summary>
+        /// Writes an array of signed ints to Output.
+        /// </summary>
+        /// <param name="value">Array of signed ints to write.</param>
         public void WriteInts(int[] value) {
             foreach (int element in value) {
                 WriteInt(element);
             }
         }
 
+        /// <summary>
+        /// Writes a signed long to Output.
+        /// </summary>
+        /// <param name="value">Signed long to write.</param>
         public void WriteLong(long value) {
             Span<byte> bytes = stackalloc byte[sizeof(long)];
             BinaryPrimitives.WriteInt64LittleEndian(bytes, value);
             Output.Write(bytes);
         }
 
+        /// <summary>
+        /// Writes an array of signed longs to Output.
+        /// </summary>
+        /// <param name="value">Array of signed longs to write.</param>
         public void WriteLongs(long[] value) {
             foreach (long element in value) {
                 WriteLong(element);
             }
         }
 
+        /// <summary>
+        /// Writes a single precision float to Output.
+        /// </summary>
+        /// <param name="value">Single precision float to write.</param>
         public void WriteSingle(float value) {
             WriteInt(BitConverter.SingleToInt32Bits(value));
         }
 
+        /// <summary>
+        /// Writes a double precision float to Output.
+        /// </summary>
+        /// <param name="value">Double precision float to write.</param>
         public void WriteDouble(double value) {
             WriteLong(BitConverter.DoubleToInt64Bits(value));
         }
 
+        /// <summary>
+        /// Writes a string to Output. The string will be encoded as UTF8.
+        /// </summary>
+        /// <param name="value">String to write.</param>
         public void WriteString(string value) {
             WriteUShort((ushort)Encoding.UTF8.GetByteCount(value));
             Output.Write(Encoding.UTF8.GetBytes(value));
         }
 
+        /// <inheritdoc/>
         public void Dispose() {
             Output.Dispose();
         }
