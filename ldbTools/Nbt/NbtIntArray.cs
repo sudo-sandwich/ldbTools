@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Int_Array.
     /// </summary>
     public class NbtIntArray : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.IntArray;
+
         /// <summary>
         /// Value of this NbtIntArray.
         /// </summary>

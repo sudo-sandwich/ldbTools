@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Double
     /// </summary>
     public class NbtDouble : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.Double;
+
         /// <summary>
         /// Value of this NbtDouble.
         /// </summary>

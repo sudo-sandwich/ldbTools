@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Compound.
     /// </summary>
     public class NbtCompound : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.Compound;
+
         /// <summary>
         /// Value of this NbtCompound.
         /// </summary>

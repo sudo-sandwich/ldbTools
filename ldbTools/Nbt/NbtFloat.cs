@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Float.
     /// </summary>
     public class NbtFloat : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.Float;
+
         /// <summary>
         /// Value of this NbtFloat.
         /// </summary>

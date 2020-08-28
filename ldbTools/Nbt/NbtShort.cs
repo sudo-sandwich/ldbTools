@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Short.
     /// </summary>
     public class NbtShort : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.Short;
+
         /// <summary>
         /// Value of this NbtShort.
         /// </summary>

@@ -15,6 +15,11 @@ namespace ldbTools.Nbt {
         public string Name { get; set; }
 
         /// <summary>
+        /// Gets the TagType associated with this NbtTag.
+        /// </summary>
+        public abstract TagType Type { get; }
+
+        /// <summary>
         /// Appends the contents of this NbtTag to a StringBuilder, indented with <paramref name="indentString"/>.
         /// </summary>
         /// <param name="sb">StringBuilder to append the contents of this NbtTag to.</param>

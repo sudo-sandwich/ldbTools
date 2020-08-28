@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Long
     /// </summary>
     public class NbtLong : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.Long;
+
         /// <summary>
         /// Value of this NbtLong.
         /// </summary>
@@ -27,7 +30,7 @@ namespace ldbTools.Nbt {
         /// <inheritdoc/>
         public override void PrettyPrint(StringBuilder sb, string indentString, int currentIndentAmount) {
             sb.Insert(sb.Length, indentString, currentIndentAmount);
-            sb.Append("TAG_Long('" + Name + "'): " + Value + "L\n");
+            sb.Append("TAG_Long('" + Name + "'): " + Value + "\n");
         }
     }
 }

@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Long_Array.
     /// </summary>
     public class NbtLongArray : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.LongArray;
+
         /// <summary>
         /// Value of this NbtLongArray.
         /// </summary>

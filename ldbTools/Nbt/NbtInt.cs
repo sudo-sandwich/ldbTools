@@ -9,6 +9,9 @@ namespace ldbTools.Nbt {
     /// Represents a TAG_Int.
     /// </summary>
     public class NbtInt : NbtTag {
+        /// <inheritdoc/>
+        public override TagType Type => TagType.Int;
+
         /// <summary>
         /// Value of this NbtInt.
         /// </summary>
