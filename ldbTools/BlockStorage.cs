@@ -3,14 +3,24 @@ using System;
 using System.Buffers.Binary;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Text;
 
 namespace ldbTools {
+    /// <summary>
+    /// Represents a 16 x 16 x 16 subchunk of blocks in Minecraft.
+    /// </summary>
+    /// <remarks>For more information on how block storage works in Minecraft: https://minecraft.gamepedia.com/Bedrock_Edition_level_format#SubChunkPrefix_record_.281.0_and_1.2.13_formats.29 </remarks>
     public class BlockStorage {
         /// <summary>
-        /// Number of blocks per side of this subchunk.
+        /// Number of blocks per side of a subchunk in Minecraft.
         /// </summary>
         public const int BlocksPerSide = 16;
+
+        /// <summary>
+        /// Total number of blocks represented in a subchunk in Minecraft.
+        /// </summary>
+        public const int TotalBlockCount = BlocksPerSide * BlocksPerSide * BlocksPerSide;
 
         /// <summary>
         /// Palette of BlockStates used in this subchunk. Every unique block in the subchunk is stored here.
@@ -20,11 +30,7 @@ namespace ldbTools {
         /// <summary>
         /// Index of the BlockState for each block in this subchunk.
         /// </summary>
-        public byte[ , , ] Blocks { get; } // stored as Blocks[x, y, z]
-
-        public int BitsPerBlock => (int)Math.Ceiling(Math.Log(BlockStatePalette.Count, 2));
-
-        public byte StorageVersion => (byte)(BitsPerBlock << 1);
+        public byte[ , , ] Blocks { get; set; } // stored as Blocks[x, y, z]
 
         /// <summary>
         /// Creates a new, empty BlockStorage.
@@ -52,22 +58,22 @@ namespace ldbTools {
             int blocksPerWord = 32 / bitsPerBlock;
 
             // total number of integers used to store each BlockStatePalette index
-            int totalWords = (int)Math.Ceiling(4096.0 / blocksPerWord);
+            int totalWords = (int)Math.Ceiling((float)TotalBlockCount / blocksPerWord);
 
-            // position of the block we are current parsing. least significant 4 bits are y coordinate, next 4 bits are z coordinate, next 4 bits are x coordinate
+            // position of the block we are currently parsing. least significant 4 bits are y coordinate, next 4 bits are z coordinate, next 4 bits are x coordinate
             int blockPosition = 0;
 
             // parse all words except the last one
             for (int i = 0; i < totalWords - 1; i++) {
-                int nextWord = BinaryPrimitives.ReadInt32LittleEndian(data.Slice(1 + i * sizeof(int)));
+                uint nextWord = BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(1 + i * sizeof(int)));
                 for (int j = 0; j < blocksPerWord; j++, blockPosition++) {
                     Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] = (byte)(nextWord >> (j * bitsPerBlock) & bitmask);
                 }
             }
 
             // last word might have some extra padding so we need to parse it slightly differently
-            int finalWord = BinaryPrimitives.ReadInt32LittleEndian(data.Slice(1 + (totalWords - 1) * sizeof(int)));
-            for (int i = 0; blockPosition < BlocksPerSide * BlocksPerSide * BlocksPerSide; i++, blockPosition++) {
+            uint finalWord = BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(1 + (totalWords - 1) * sizeof(int)));
+            for (int i = 0; blockPosition < TotalBlockCount; i++, blockPosition++) {
                 Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] = (byte)(finalWord >> (i * bitsPerBlock) & bitmask);
             }
 
@@ -88,5 +94,69 @@ namespace ldbTools {
         /// <param name="z">Z coordinate of the block.</param>
         /// <returns></returns>
         public BlockState GetBlock(int x, int y, int z) => BlockStatePalette[Blocks[x, y, z]];
+
+        /// <summary>
+        /// Encodes this BlockStorage into a sequence of bytes to be written into levelDB.
+        /// </summary>
+        /// <returns>A byte array representing this BlockStorage that can be written into levelDB.</returns>
+        public byte[] GetBytes() {
+            using (MemoryStream output = new MemoryStream()) {
+                // number of bits for each BlockStatePalette index
+                int bitsPerBlock = (int)Math.Ceiling(Math.Log(BlockStatePalette.Count, 2));
+
+                // number of block indices stored per word
+                int blocksPerWord = 32 / bitsPerBlock;
+
+                // total number of integers used to store each BlockStatePalette index. the last word is not included, since it might have some extra padding
+                int numFullWords = TotalBlockCount / blocksPerWord;
+
+                // position of the block we are currently parsing. least significant 4 bits are y coordinate, next 4 bits are z coordinate, next 4 bits are x coordinate
+                int blockPosition = 0;
+
+                // write storage version
+                output.WriteByte((byte)(bitsPerBlock << 1));
+
+                // write all full words
+                for (int i = 0; i < numFullWords; i++) {
+                    // create the next word
+                    uint nextWord = 0;
+                    for (int j = 0; j < blocksPerWord; j++, blockPosition++) {
+                        nextWord += (uint)(Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] << (j * bitsPerBlock));
+                    }
+
+                    // write the next word
+                    Span<byte> nextWordBytes = stackalloc byte[sizeof(int)];
+                    BinaryPrimitives.WriteUInt32LittleEndian(nextWordBytes, nextWord);
+                    output.Write(nextWordBytes);
+                }
+
+                // handle the final word if necessary
+                if (blockPosition < TotalBlockCount) {
+                    // create the final word
+                    uint finalWord = 0;
+                    for (int i = 0; blockPosition < TotalBlockCount; i++, blockPosition++) {
+                        finalWord += (uint)(Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] << (i * bitsPerBlock));
+                    }
+
+                    // write the final word
+                    Span<byte> finalWordBytes = stackalloc byte[sizeof(int)];
+                    BinaryPrimitives.WriteUInt32LittleEndian(finalWordBytes, finalWord);
+                    output.Write(finalWordBytes);
+                }
+
+                // write the size of the palette
+                Span<byte> paletteSizeBytes = stackalloc byte[sizeof(int)];
+                BinaryPrimitives.WriteInt32LittleEndian(paletteSizeBytes, BlockStatePalette.Count);
+                output.Write(paletteSizeBytes);
+
+                // write the block states as NBT
+                NbtByteWriter nbtWriter = new NbtByteWriter(output);
+                foreach (BlockState state in BlockStatePalette) {
+                    nbtWriter.WriteNbtTag(state.RootNbtCompound);
+                }
+
+                return output.ToArray();
+            }
+        }
     }
 }

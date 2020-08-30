@@ -10,41 +10,35 @@ using System.Text;
 namespace ldbTools {
     class Program {
         static void Main(string[] args) {
-            string dbDir = @"C:\Users\Conrad\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds\jmVIX8GHAAA=\db";
+            Console.ReadKey();
 
-            byte[] subChunkKey = GetSubChunkKey(0, 0, 0);
-            Console.Write("SubChunkPrefix key: ");
-            PrintBytes(subChunkKey);
+            string dbDir = @"C:\Users\Conrad\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds\JB9MX2NLswA=\db";
 
+            byte[] testingKey = GetSubChunkKey(1, 1, 0);
+            Console.Write("SubChunkPrefix testing key: ");
+            PrintBytes(testingKey);
+
+            byte[] sphereSubChunk = CreateSphereSubChunkBytes();
+
+            Console.WriteLine("Opening levelDB...");
             Database db = new Database(new DirectoryInfo(dbDir));
             db.Open();
 
-            byte[] chunk = db.Get(subChunkKey);
-            //byte[] blockEntity = db.Get(blockEntityKey);
+            byte[] originalSubChunk = db.Get(testingKey);
+            Console.WriteLine("Retrived original bytes.");
+
+            db.Put(testingKey, sphereSubChunk);
+            Console.WriteLine("Replaced bytes.");
 
             db.Close();
+            Console.WriteLine("Closed levelDB.");
 
-            PrintBytes(chunk);
+            Console.WriteLine("Original bytes:");
+            PrintBytes(originalSubChunk);
+            Console.WriteLine();
 
-            byte subChunkVersion = chunk[0];
-            byte storageCount = chunk[1];
-
-            BlockStorage blockStorage = new BlockStorage(new Span<byte>(chunk, 2, chunk.Length - 2));
-
-            Console.WriteLine("subChunkVersion: {0}", subChunkVersion);
-            Console.WriteLine("storageCount: {0}", storageCount);
-
-            for (int x = 0; x < blockStorage.Blocks.GetLength(0); x++) {
-                for (int y = 0; y < blockStorage.Blocks.GetLength(1); y++) {
-                    for (int z = 0; z < blockStorage.Blocks.GetLength(2); z++) {
-                        Console.WriteLine("{0}, {1}, {2}: {3}, {4}", x, y, z, blockStorage.GetBlock(x, y, z).Name, blockStorage.Blocks[x, y, z]);
-                    }
-                }
-            }
-
-            foreach (BlockState blockState in blockStorage.BlockStatePalette) {
-                Console.WriteLine(blockState.RootNbtCompound);
-            }
+            Console.WriteLine("Replaced bytes:");
+            PrintBytes(sphereSubChunk);
         }
 
         public static byte[] GetSubChunkKey(int x, int z, int y) {
@@ -81,6 +75,51 @@ namespace ldbTools {
                 Console.Write(b.ToString("X2") + " ");
             }
             Console.WriteLine();
+        }
+
+        public static byte[] CreateSphereSubChunkBytes() {
+            byte[,,] sphere = new byte[16, 16, 16];
+            CreateSphere(new Vector3(7, 7, 7), 7, sphere, 1);
+
+            BlockState air = new BlockState("minecraft:air");
+            BlockState glass = new BlockState("minecraft:glass");
+
+            BlockStorage newSubChunk = new BlockStorage();
+            newSubChunk.BlockStatePalette.Add(air);
+            newSubChunk.BlockStatePalette.Add(glass);
+            newSubChunk.Blocks = sphere;
+
+            byte[] newSubChunkBytes = newSubChunk.GetBytes();
+            byte[] newSubChunkPrefix = new byte[2 + newSubChunkBytes.Length];
+            newSubChunkPrefix[0] = 0x08;
+            newSubChunkPrefix[1] = 0x01;
+            Buffer.BlockCopy(newSubChunkBytes, 0, newSubChunkPrefix, 2, newSubChunkBytes.Length);
+
+            return newSubChunkPrefix;
+        }
+
+        public static void CreateSphere(Vector3 center, int radius, byte[ , , ] destination, byte value) {
+            for (int x = 0; x < destination.GetLength(0); x++) {
+                for (int y = 0; y < destination.GetLength(1); y++) {
+                    for (int z = 0; z < destination.GetLength(2); z++) {
+                        if ((int)Math.Sqrt(Math.Pow(x - center.x, 2) + Math.Pow(y - center.y, 2) + Math.Pow(z - center.z, 2)) == radius) {
+                            destination[x, y, z] = value;
+                        }
+                    }
+                }
+            }
+        }
+
+        public struct Vector3 {
+            public int x;
+            public int y;
+            public int z;
+
+            public Vector3(int x, int y, int z) {
+                this.x = x;
+                this.y = y;
+                this.z = z;
+            }
         }
     }
 }

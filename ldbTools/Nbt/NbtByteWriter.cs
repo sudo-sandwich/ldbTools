@@ -23,6 +23,14 @@ namespace ldbTools.Nbt {
         }
 
         /// <summary>
+        /// Creates a new NbtByteWriter that will write to <paramref name="destination"/>.
+        /// </summary>
+        /// <param name="destination">The stream to write to.</param>
+        public NbtByteWriter(MemoryStream destination) {
+            Output = destination;
+        }
+
+        /// <summary>
         /// Writes the given tag to Output.
         /// </summary>
         /// <param name="tagToWrite">Tag to write.</param>
