@@ -43,7 +43,7 @@ namespace ldbTools {
             }
 
             foreach (BlockState blockState in blockStorage.BlockStatePalette) {
-                Console.WriteLine(blockState.ToNbt());
+                Console.WriteLine(blockState.RootNbtCompound);
             }
         }
 
