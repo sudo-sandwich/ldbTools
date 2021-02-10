@@ -10,35 +10,38 @@ using System.Text;
 namespace ldbTools {
     class Program {
         static void Main(string[] args) {
-            Console.ReadKey();
-
-            string dbDir = @"C:\Users\Conrad\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds\JB9MX2NLswA=\db";
-
-            byte[] testingKey = GetSubChunkKey(1, 1, 0);
-            Console.Write("SubChunkPrefix testing key: ");
-            PrintBytes(testingKey);
-
-            byte[] sphereSubChunk = CreateSphereSubChunkBytes();
+            //string dbDir = @"C:\Users\Conrad\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds\JB9MX2NLswA=\db";
+            string dbDir = @"C:\Users\Conrad\AppData\Local\Packages\Microsoft.MinecraftUWP_8wekyb3d8bbwe\LocalState\games\com.mojang\minecraftWorlds\tzdZXxzEXgA\db";
 
             Console.WriteLine("Opening levelDB...");
             Database db = new Database(new DirectoryInfo(dbDir));
             db.Open();
 
-            byte[] originalSubChunk = db.Get(testingKey);
-            Console.WriteLine("Retrived original bytes.");
-
-            db.Put(testingKey, sphereSubChunk);
-            Console.WriteLine("Replaced bytes.");
+            Test.GetAllBlocks(db);
+            /*
+            byte[] subChunkData = db.Get(GetSubChunkKey(0, 0, 0));
+            byte[] blockEntityData = db.Get(GetBlockEntityKey(0, 0));
+            */
 
             db.Close();
             Console.WriteLine("Closed levelDB.");
 
-            Console.WriteLine("Original bytes:");
-            PrintBytes(originalSubChunk);
-            Console.WriteLine();
+            /*
+            BlockStorage subChunk = new BlockStorage(new Span<byte>(subChunkData, 2, subChunkData.Length - 2));
 
-            Console.WriteLine("Replaced bytes:");
-            PrintBytes(sphereSubChunk);
+            NbtByteReader reader = new NbtByteReader(blockEntityData);
+            IList<NbtTag> blockEntities = new List<NbtTag>();
+            while (reader.HasNext()) {
+                blockEntities.Add(reader.ParseNext());
+            }
+
+            foreach (BlockStateWrapper state in subChunk.BlockStatePalette) {
+                Console.WriteLine(state.RootNbtCompound);
+            }
+            foreach (NbtTag tag in blockEntities) {
+                Console.WriteLine(tag);
+            }
+            */
         }
 
         public static byte[] GetSubChunkKey(int x, int z, int y) {
@@ -81,8 +84,8 @@ namespace ldbTools {
             byte[,,] sphere = new byte[16, 16, 16];
             CreateSphere(new Vector3(7, 7, 7), 7, sphere, 1);
 
-            BlockState air = new BlockState("minecraft:air");
-            BlockState glass = new BlockState("minecraft:glass");
+            BlockStateWrapper air = new BlockStateWrapper("minecraft:air");
+            BlockStateWrapper glass = new BlockStateWrapper("minecraft:glass");
 
             BlockStorage newSubChunk = new BlockStorage();
             newSubChunk.BlockStatePalette.Add(air);

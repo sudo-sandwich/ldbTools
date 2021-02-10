@@ -50,7 +50,7 @@ namespace ldbTools.Nbt {
         /// <inheritdoc/>
         public override void PrettyPrint(StringBuilder sb, string indentString, int currentIndentAmount) {
             sb.Insert(sb.Length, indentString, currentIndentAmount);
-            sb.Append("TAG_List('" + Name + "'): " + Value.Count + " entries\n");
+            sb.Append("TAG_List('" + Name + "'): " + Value.Count + " entries, TAG_" + ContentType + "\n");
             sb.Insert(sb.Length, indentString, currentIndentAmount);
             sb.Append("{\n");
 

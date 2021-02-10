@@ -21,10 +21,20 @@ namespace ldbTools.Nbt {
         /// Creates a new NbtByte with the given name and value.
         /// </summary>
         /// <param name="name">Name of this NbtByte.</param>
-        /// <param name="value">Value of this NbtByte.</param>
+        /// <param name="value">Value of this NbtByte. false = 0, true = 1.</param>
         public NbtByte(string name, sbyte value) {
             Name = name;
             Value = value;
+        }
+
+        /// <summary>
+        /// Creates a new NbtByte with the given name and based on a boolean value.
+        /// </summary>
+        /// <param name="name">Name of this NbtByte.</param>
+        /// <param name="value">Value of this NbtByte.</param>
+        public NbtByte(string name, bool value) {
+            Name = name;
+            Value = Convert.ToSByte(value);
         }
 
         /// <inheritdoc/>

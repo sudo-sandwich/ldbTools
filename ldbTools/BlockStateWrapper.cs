@@ -8,7 +8,7 @@ namespace ldbTools {
     /// Wraps block state NBT data.
     /// </summary>
     /// <remarks>Changes to a BlockState object will affect the underlying NBT and vice versa.</remarks>
-    public class BlockState {
+    public class BlockStateWrapper {
         /// <summary>
         /// Gets or sets the underlying NBT for the namespaced ID of the block.
         /// </summary>
@@ -51,7 +51,7 @@ namespace ldbTools {
         /// Creates a new, empty BlockState.
         /// </summary>
         /// <param name="name">Namespaced ID of the block this BlockState will represent.</param>
-        public BlockState(string name) {
+        public BlockStateWrapper(string name) {
             NbtName = new NbtString("name", name);
             NbtStates = new NbtCompound("states");
             NbtVersion = new NbtInt("version", 17825808); // magic number. never seen this value be anything else.
@@ -63,7 +63,7 @@ namespace ldbTools {
         /// Wraps an existing NbtCompound as a new BlockState. Changes to this BlockState will affect the underlying NBT and vice versa.
         /// </summary>
         /// <param name="source">The NbtCompound to wrap.</param>
-        public BlockState(NbtCompound source) {
+        public BlockStateWrapper(NbtCompound source) {
             NbtName = source.Get<NbtString>("name");
             NbtStates = source.Get<NbtCompound>("states");
             NbtVersion = source.Get<NbtInt>("version");

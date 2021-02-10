@@ -25,7 +25,7 @@ namespace ldbTools {
         /// <summary>
         /// Palette of BlockStates used in this subchunk. Every unique block in the subchunk is stored here.
         /// </summary>
-        public IList<BlockState> BlockStatePalette { get; }
+        public IList<BlockStateWrapper> BlockStatePalette { get; }
 
         /// <summary>
         /// Index of the BlockState for each block in this subchunk.
@@ -36,7 +36,7 @@ namespace ldbTools {
         /// Creates a new, empty BlockStorage.
         /// </summary>
         public BlockStorage() {
-            BlockStatePalette = new List<BlockState>();
+            BlockStatePalette = new List<BlockStateWrapper>();
             Blocks = new byte[BlocksPerSide, BlocksPerSide, BlocksPerSide];
         }
 
@@ -44,9 +44,8 @@ namespace ldbTools {
         /// Parses the first bytes of <paramref name="data"/> into a new BlockStorage. Following bytes will be ignored.
         /// </summary>
         /// <param name="data">Block storage data provided by Minecraft to parse.</param>
-        public BlockStorage(Span<byte> data) {
-            BlockStatePalette = new List<BlockState>();
-            Blocks = new byte[BlocksPerSide, BlocksPerSide, BlocksPerSide];
+        public static BlockStorage Load(Span<byte> data) {
+            BlockStorage bs = new BlockStorage();
 
             // number of bits for each BlockStatePalette index
             int bitsPerBlock = data[0] >> 1;
@@ -67,14 +66,14 @@ namespace ldbTools {
             for (int i = 0; i < totalWords - 1; i++) {
                 uint nextWord = BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(1 + i * sizeof(int)));
                 for (int j = 0; j < blocksPerWord; j++, blockPosition++) {
-                    Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] = (byte)(nextWord >> (j * bitsPerBlock) & bitmask);
+                    bs.Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] = (byte)(nextWord >> (j * bitsPerBlock) & bitmask);
                 }
             }
 
             // last word might have some extra padding so we need to parse it slightly differently
             uint finalWord = BinaryPrimitives.ReadUInt32LittleEndian(data.Slice(1 + (totalWords - 1) * sizeof(int)));
             for (int i = 0; blockPosition < TotalBlockCount; i++, blockPosition++) {
-                Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] = (byte)(finalWord >> (i * bitsPerBlock) & bitmask);
+                bs.Blocks[blockPosition >> 8 & 15, blockPosition & 15, blockPosition >> 4 & 15] = (byte)(finalWord >> (i * bitsPerBlock) & bitmask);
             }
 
             // parse BlockStatePalette
@@ -82,8 +81,10 @@ namespace ldbTools {
             NbtByteReader nbtReader = new NbtByteReader(data.Slice(1 + (totalWords + 1) * sizeof(int)));
             for (int i = 0; i < paletteSize; i++) {
                 NbtCompound nextState = (NbtCompound)nbtReader.ParseNext();
-                BlockStatePalette.Add(new BlockState(nextState));
+                bs.BlockStatePalette.Add(new BlockStateWrapper(nextState));
             }
+
+            return bs;
         }
 
         /// <summary>
@@ -92,8 +93,8 @@ namespace ldbTools {
         /// <param name="x">X coordinate of the block.</param>
         /// <param name="y">Y coordinate of the block.</param>
         /// <param name="z">Z coordinate of the block.</param>
-        /// <returns></returns>
-        public BlockState GetBlock(int x, int y, int z) => BlockStatePalette[Blocks[x, y, z]];
+        /// <returns>The block state of the block at the given position.</returns>
+        public BlockStateWrapper GetBlock(int x, int y, int z) => BlockStatePalette[Blocks[x, y, z]];
 
         /// <summary>
         /// Encodes this BlockStorage into a sequence of bytes to be written into levelDB.
@@ -151,7 +152,7 @@ namespace ldbTools {
 
                 // write the block states as NBT
                 NbtByteWriter nbtWriter = new NbtByteWriter(output);
-                foreach (BlockState state in BlockStatePalette) {
+                foreach (BlockStateWrapper state in BlockStatePalette) {
                     nbtWriter.WriteNbtTag(state.RootNbtCompound);
                 }
 
